@@ -5,6 +5,7 @@ struct Material {
    float shine;
 };
 
+
 uniform vec3 uLColor;
 uniform Material uMat;
 uniform int uShowNormal;

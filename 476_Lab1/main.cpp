@@ -14,6 +14,9 @@
 #endif
 
 #include "CMeshLoaderSimple.h"
+#include "GameObject.hpp"
+#include "GLHandles.h"
+#include "Airplane.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
@@ -35,23 +38,14 @@
 #define GROUND_MAT 3
 
 using namespace std;
-unsigned int const StepSize = 1000;
+unsigned int const StepSize = 100;
 
 //GL basics
 int ShadeProg;
 static float g_width, g_height;
 
 //Handles to the shader data
-GLint h_aPosition;
-GLint h_aNormal;
-GLint h_uModelMatrix;
-GLint h_uViewMatrix;
-GLint h_uProjMatrix;
-GLint h_uNormMatrix;
-GLint h_uLightPos;
-GLint h_uLightColor;
-GLint h_uEyePos;
-GLint h_uMatAmb, h_uMatDif, h_uMatSpec, h_uMatShine;
+GLHandles handles;
 
 //Ground
 GLuint GrndNormalBuffObj, GrndBuffObj, GIndxBuffObj, GrndTexBuffObj;
@@ -61,12 +55,7 @@ static const float g_groundY = 0;
 static const float g_groundSize = 10.0;
 
 //Airplanes
-int TriangleCount;
-GLuint planeBuffObj, colBuffObj, planeNormalBuffObj;
-glm::vec3 planeLocations[NUM_PLANES];
-glm::vec3 planeSizes[NUM_PLANES];
-float planeRotation[NUM_PLANES];
-int numPlanesOnScreen = 0;
+vector<Airplane> planes;
 
 //Light
 glm::vec3 lightPos;
@@ -75,8 +64,8 @@ glm::vec3 lightPos;
 bool overheadView = false;
 float overheadHeight = 5.0;
 float firstPersonHeight = 1;
-glm::vec3 eye = glm::vec3(-1, firstPersonHeight, -1);
-glm::vec3 lookAt = glm::vec3(0, 0, 0);
+glm::vec3 eye = glm::vec3(g_groundSize / 2, firstPersonHeight, g_groundSize / 2);
+glm::vec3 lookAt = glm::vec3(g_groundSize / 2 + 1, firstPersonHeight, g_groundSize / 2 + 1);
 glm::vec3 overheadEye = glm::vec3(-1, overheadHeight, -1);
 glm::vec3 overheadLookAt = eye;
 glm::vec3 upV = glm::vec3(0, 1, 0);
@@ -93,7 +82,7 @@ bool wframe = false;
 /* projection matrix */
 void SetProjectionMatrix() {
    glm::mat4 Projection = glm::perspective(80.0f, (float)g_width/g_height, 0.1f, 100.f);
-   safe_glUniformMatrix4fv(h_uProjMatrix, glm::value_ptr(Projection));
+   safe_glUniformMatrix4fv(handles.uProjMatrix, glm::value_ptr(Projection));
 }
 
 /* camera controls */
@@ -103,7 +92,7 @@ void SetView() {
       view = glm::lookAt(overheadEye, overheadLookAt, upV);
    else
       view = glm::lookAt(eye, lookAt, upV);
-   safe_glUniformMatrix4fv(h_uViewMatrix, glm::value_ptr(view));
+   safe_glUniformMatrix4fv(handles.uViewMatrix, glm::value_ptr(view));
 }
 
 //Generates a random float within the range min-max
@@ -121,22 +110,23 @@ void setWorld()
       for(int j = 0; j < g_groundSize; j++)
          groundTiles.push_back(glm::vec3(i, g_groundY, j));
    }
+   
    lightPos= glm::vec3(MAZE_WIDTH / 2, 5, 0);
    
    //Send light data to shader
-   safe_glUniform3f(h_uLightColor, lightPos.x, lightPos.y, lightPos.z);
-   safe_glUniform3f(h_uLightColor, 1, 1, 1);
+   safe_glUniform3f(handles.uLightColor, lightPos.x, lightPos.y, lightPos.z);
+   safe_glUniform3f(handles.uLightColor, 1, 1, 1);
 }
 
 //Add a new plane
 void addPlane()
 {
-   planeSizes[numPlanesOnScreen] = glm::vec3(randomFloat(.5, 1.0));
-   planeLocations[numPlanesOnScreen] = glm::vec3(randomFloat(.5, g_groundSize - .5),
-                                PLANE_HEIGHT,
-                                randomFloat(.5, g_groundSize - .5));
-   planeRotation[numPlanesOnScreen] = randomFloat(-180, 180);
-   numPlanesOnScreen++;
+   glm::vec3 pos = glm::vec3(randomFloat(.5, g_groundSize - .5),
+                            PLANE_HEIGHT,
+                            randomFloat(.5, g_groundSize - .5));
+   glm::vec3 size = glm::vec3(randomFloat(.5, 1.0));
+   float rot  = randomFloat(-180, 180);
+   planes.push_back(Airplane(pos, size, rot, handles));
 }
 
 /* Set up matrices to place model in the world */
@@ -146,16 +136,16 @@ void SetModel(glm::vec3 loc, glm::vec3 size, float rotation) {
    glm::mat4 Rotate = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 1, 0));
    
    glm::mat4 final = Trans * Rotate * Scale;
-   safe_glUniformMatrix4fv(h_uModelMatrix, glm::value_ptr(final));
-   safe_glUniformMatrix4fv(h_uNormMatrix, glm::value_ptr(glm::vec4(1.0f)));
+   safe_glUniformMatrix4fv(handles.uModelMatrix, glm::value_ptr(final));
+   safe_glUniformMatrix4fv(handles.uNormMatrix, glm::value_ptr(glm::vec4(1.0f)));
 }
 
 /* Set up matrices for ground plane */
 void setGround(glm::vec3 loc)
 {
    glm::mat4 ctm = glm::translate(glm::mat4(1.0f), loc);
-   safe_glUniformMatrix4fv(h_uModelMatrix, glm::value_ptr(ctm));
-   safe_glUniformMatrix4fv(h_uNormMatrix, glm::value_ptr(glm::mat4(1.0f)));
+   safe_glUniformMatrix4fv(handles.uModelMatrix, glm::value_ptr(ctm));
+   safe_glUniformMatrix4fv(handles.uNormMatrix, glm::value_ptr(glm::mat4(1.0f)));
 }
 
 /* Code to create a large ground plane,
@@ -213,7 +203,6 @@ static void initGround() {
 /* Initialize the geometry */
 void InitGeom() {
    initGround();
-   CMeshLoader::loadVertexBufferObjectFromMesh("cessna500.m", TriangleCount, planeBuffObj, colBuffObj, planeNormalBuffObj);
 }
 
 /*function to help load the shaders (both vertex and fragment */
@@ -262,19 +251,19 @@ int InstallShader(const GLchar *vShaderName, const GLchar *fShaderName) {
    glUseProgram(ShadeProg);
    
    /* get handles to attribute and uniform data in shader */
-   h_aPosition = safe_glGetAttribLocation(ShadeProg, "aPosition");
-   h_aNormal = safe_glGetAttribLocation(ShadeProg,	"aNormal");
-   h_uProjMatrix = safe_glGetUniformLocation(ShadeProg, "uProjMatrix");
-   h_uViewMatrix = safe_glGetUniformLocation(ShadeProg, "uViewMatrix");
-   h_uModelMatrix = safe_glGetUniformLocation(ShadeProg, "uModelMatrix");
-   h_uNormMatrix = safe_glGetUniformLocation(ShadeProg, "uNormalMatrix");
-   h_uLightPos = safe_glGetUniformLocation(ShadeProg, "uLightPos");
-   h_uLightColor = safe_glGetUniformLocation(ShadeProg, "uLColor");
-   h_uEyePos = safe_glGetUniformLocation(ShadeProg, "uEyePos");
-   h_uMatAmb = safe_glGetUniformLocation(ShadeProg, "uMat.aColor");
-   h_uMatDif = safe_glGetUniformLocation(ShadeProg, "uMat.dColor");
-   h_uMatSpec = safe_glGetUniformLocation(ShadeProg, "uMat.sColor");
-   h_uMatShine = safe_glGetUniformLocation(ShadeProg, "uMat.shine");
+   handles.aPosition = safe_glGetAttribLocation(ShadeProg, "aPosition");
+   handles.aNormal = safe_glGetAttribLocation(ShadeProg,	"aNormal");
+   handles.uProjMatrix = safe_glGetUniformLocation(ShadeProg, "uProjMatrix");
+   handles.uViewMatrix = safe_glGetUniformLocation(ShadeProg, "uViewMatrix");
+   handles.uModelMatrix = safe_glGetUniformLocation(ShadeProg, "uModelMatrix");
+   handles.uNormMatrix = safe_glGetUniformLocation(ShadeProg, "uNormalMatrix");
+   handles.uLightPos = safe_glGetUniformLocation(ShadeProg, "uLightPos");
+   handles.uLightColor = safe_glGetUniformLocation(ShadeProg, "uLColor");
+   handles.uEyePos = safe_glGetUniformLocation(ShadeProg, "uEyePos");
+   handles.uMatAmb = safe_glGetUniformLocation(ShadeProg, "uMat.aColor");
+   handles.uMatDif = safe_glGetUniformLocation(ShadeProg, "uMat.dColor");
+   handles.uMatSpec = safe_glGetUniformLocation(ShadeProg, "uMat.sColor");
+   handles.uMatShine = safe_glGetUniformLocation(ShadeProg, "uMat.shine");
    
    printf("sucessfully installed shader %d\n", ShadeProg);
    return 1;
@@ -286,16 +275,16 @@ void SetMaterial(int i) {
    glUseProgram(ShadeProg);
    switch (i) {
       case 0:
-         safe_glUniform3f(h_uMatAmb, 0.2, 0.2, 0.2);
-         safe_glUniform3f(h_uMatDif, 0.4, 0.4, 0.4);
-         safe_glUniform3f(h_uMatSpec, 0.2, 0.2, 0.2);
-         safe_glUniform1f(h_uMatShine, .2);
+         safe_glUniform3f(handles.uMatAmb, 0.2, 0.2, 0.2);
+         safe_glUniform3f(handles.uMatDif, 0.4, 0.4, 0.4);
+         safe_glUniform3f(handles.uMatSpec, 0.2, 0.2, 0.2);
+         safe_glUniform1f(handles.uMatShine, .2);
          break;
       case GROUND_MAT:
-         safe_glUniform3f(h_uMatAmb, 0.1, 0.3, 0.1);
-         safe_glUniform3f(h_uMatDif, 0.1, 0.3, 0.1);
-         safe_glUniform3f(h_uMatSpec, 0.3, 0.3, 0.4);
-         safe_glUniform1f(h_uMatShine, 1.0);
+         safe_glUniform3f(handles.uMatAmb, 0.1, 0.3, 0.1);
+         safe_glUniform3f(handles.uMatDif, 0.1, 0.3, 0.1);
+         safe_glUniform3f(handles.uMatSpec, 0.3, 0.3, 0.4);
+         safe_glUniform1f(handles.uMatShine, 1.0);
          break;
    }
 }
@@ -322,45 +311,37 @@ void Draw (void)
    SetProjectionMatrix();
    SetView();
    
-   safe_glUniform3f(h_uEyePos, eye.x, eye.y, eye.z);
+   safe_glUniform3f(handles.uEyePos, eye.x, eye.y, eye.z);
    
    //-------------------------------Ground Plane --------------------------
-   safe_glEnableVertexAttribArray(h_aPosition);
-   safe_glEnableVertexAttribArray(h_aNormal);
+   safe_glEnableVertexAttribArray(handles.aPosition);
+   safe_glEnableVertexAttribArray(handles.aNormal);
    SetMaterial(GROUND_MAT);
    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    for (std::vector<glm::vec3>::iterator it = groundTiles.begin(); it != groundTiles.end(); ++ it) {
       setGround(glm::vec3(it->x, it->y, it->z));
       
       glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
-      safe_glVertexAttribPointer(h_aPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+      safe_glVertexAttribPointer(handles.aPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
       
-      safe_glEnableVertexAttribArray(h_aNormal);
+      safe_glEnableVertexAttribArray(handles.aNormal);
       glBindBuffer(GL_ARRAY_BUFFER, GrndNormalBuffObj);
-      safe_glVertexAttribPointer(h_aNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+      safe_glVertexAttribPointer(handles.aNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);
       
       glDrawElements(GL_TRIANGLES, g_GiboLen, GL_UNSIGNED_SHORT, 0);
    }
    
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   //--------------------------------Tyranasaurus-------------------------------
-   for (int i = 0; i < numPlanesOnScreen; i++) {
-      SetModel(planeLocations[i], planeSizes[i], planeRotation[i]);
-      SetMaterial(2);
-      
-      glBindBuffer(GL_ARRAY_BUFFER, planeBuffObj);
-      safe_glVertexAttribPointer(h_aPosition, 4, GL_FLOAT, GL_FALSE, 0, 0);
-      
-      glBindBuffer(GL_ARRAY_BUFFER, planeNormalBuffObj);
-      safe_glVertexAttribPointer(h_aNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);
-      
-      glDrawArrays(GL_TRIANGLES, 0, TriangleCount * 3);
+   SetMaterial(2);
+   //--------------------------------Airplanes-------------------------------
+   for (std::vector<Airplane>::iterator it = planes.begin(); it != planes.end(); ++ it) {
+      it->draw();
    }
    
    //clean up
-	safe_glDisableVertexAttribArray(h_aPosition);
-	safe_glDisableVertexAttribArray(h_aNormal);
+	safe_glDisableVertexAttribArray(handles.aPosition);
+	safe_glDisableVertexAttribArray(handles.aNormal);
    
 	//Disable the shader
 	glUseProgram(0);
@@ -462,21 +443,27 @@ void mouse(int x, int y)
 }
 
 /*Given a position and a distance from that position calculates
- *If that position would be in the world */
+ *If that position would be in the world 
+ *False if no collision*/
 bool detectCollision(glm::vec3 eye, glm::vec3 delta)
 {
    float moveX = eye.x + (.1) * delta.x;
    float moveZ = eye.z + (.1) * delta.z;
    
-   //Check for collision with a plane
-   for (int i = 0; i <= numPlanesOnScreen; i++) {
-      if ((moveX <= planeLocations[i].x + WALL_COLLISION_SIZE && moveX >= planeLocations[i].x - WALL_COLLISION_SIZE) &&
-          (moveZ <= planeLocations[i].z + WALL_COLLISION_SIZE && moveZ >= planeLocations[i].z -WALL_COLLISION_SIZE)) {
-         printf("Plane collision\n");
-         return true;
+   //Keep the player inside the world
+   if ((moveX <= g_groundSize - .5) && (moveX >= .5) && (moveZ <= g_groundSize - .5) && (moveZ >= .5))
+   {
+      //Check for collision with a plane
+      for (std::vector<Airplane>::iterator it = planes.begin(); it != planes.end(); ++ it) {
+         if ((moveX <= it->getPos().x + WALL_COLLISION_SIZE && moveX >= it->getPos().x - WALL_COLLISION_SIZE) &&
+             (moveZ <= it->getPos().z + WALL_COLLISION_SIZE && moveZ >= it->getPos().z -WALL_COLLISION_SIZE)) {
+            it->kill();
+            return true;
+         }
       }
+      return false;
    }
-   return false;
+   return true;
 }
 
 void move(glm::vec3 delta)
@@ -501,12 +488,54 @@ void move(glm::vec3 delta)
 
 void Timer(int param)
 {
-   if(numPlanesOnScreen < NUM_PLANES)
+   if(planes.size() < NUM_PLANES && param == 20)
    {
       addPlane();
+      param = 0;
    }
+   
+   for (std::vector<Airplane>::iterator it = planes.begin(); it != planes.end(); ++ it)
+   {
+      it->step();
+      
+      //Plane has crashed, remove it from the vector
+      if(it->getPos().y < g_groundY - .5)
+      {
+         it = planes.erase(it);
+      }
+      //Plane flew off the left or right border
+      else if(it->getPos().x > g_groundSize - .5 || it->getPos().x < .5)
+      {
+         it->bounce(glm::vec3(1, 0, 0));
+      }
+      //Plane flew off the top or bottom border
+      else if(it->getPos().z > g_groundSize - .5 || it->getPos().z < .5)
+      {
+         it->bounce(glm::vec3(0, 0, 1));
+      }
+      //Plane in the world, make sure it didn't hit another plane
+      else
+      {
+         for (std::vector<Airplane>::iterator it2 = planes.begin(); it2 != planes.end(); ++ it2)
+         {
+            if(it != it2)
+            {
+               if ((it2->getPos().x <= it->getPos().x + WALL_COLLISION_SIZE &&
+                    it2->getPos().x >= it->getPos().x - WALL_COLLISION_SIZE) &&
+                   (it2->getPos().z <= it->getPos().z + WALL_COLLISION_SIZE &&
+                    it2->getPos().z >= it->getPos().z -WALL_COLLISION_SIZE) &&
+                   it->getPos().y == it2->getPos().y) {
+                      glm::vec3 planeOrigVel = it->getVel();
+                      it->bounce(it2->getVel());
+                      it2->bounce(planeOrigVel);
+               }
+            }
+         }
+      }
+   }
+   
    glutPostRedisplay();
-   glutTimerFunc(StepSize, Timer, 1);
+   glutTimerFunc(StepSize, Timer, ++param);
 }
 
 //the keyboard callback

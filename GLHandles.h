@@ -10,7 +10,10 @@
 #define ___76_Lab1__GLHandles__
 
 #include <iostream>
+
+#ifdef __APPLE__
 #include <OPENGL/gl.h>
+#endif
 
 class GLHandles
 {

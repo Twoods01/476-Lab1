@@ -10,7 +10,6 @@
 #define _76_Lab1_Airplane_h
 
 #include "GameObject.hpp"
-#include <OPENGL/gl.h>
 #include "glm/glm.hpp"
 
 class Airplane : public GameObject

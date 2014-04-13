@@ -14,11 +14,12 @@
 #endif
 
 #define GLFW_INCLUDE_GLU
-#include "GLFW/glfw3.h"
+//#include "GLFW/glfw3.h"
 #include "CMeshLoaderSimple.h"
 #include "GameObject.hpp"
 #include "GLHandles.h"
 #include "Airplane.hpp"
+#include "Text.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
@@ -59,6 +60,9 @@ static const float g_groundSize = 10.0;
 //Airplanes
 vector<Airplane> planes;
 
+
+vector<Text> text;
+
 //Light
 glm::vec3 lightPos;
 
@@ -76,6 +80,8 @@ float yaw = pi/2;
 //Save pitch and yaw when going to overheadView
 float eyePitch;
 float eyeYaw;
+
+glm::mat4 ortho = glm::ortho(0.0f, (float)g_width,(float)g_height,0.0f, 0.1f, 100.0f);
 
 //User interaction
 glm::vec2 prevMouseLoc;
@@ -142,6 +148,17 @@ void addPlane()
    planes.push_back(Airplane(pos, size, rot, handles));
 }
 
+//Add a new plane
+void addText()
+{
+   glm::vec3 pos = glm::vec3(randomFloat(.5, g_groundSize - .5),
+                            PLANE_HEIGHT,
+                            randomFloat(.5, g_groundSize - .5));
+   glm::vec3 size = glm::vec3(randomFloat(.5, 1.0));
+   float rot  = 0; //randomFloat(-180, 180);
+   text.push_back(Text(pos, size, rot, handles));
+}
+
 /* Set up matrices to place model in the world */
 void SetModel(glm::vec3 loc, glm::vec3 size, float rotation) {
    glm::mat4 Scale = glm::scale(glm::mat4(1.0f), size);
@@ -150,6 +167,7 @@ void SetModel(glm::vec3 loc, glm::vec3 size, float rotation) {
    
    glm::mat4 final = Trans * Rotate * Scale;
    safe_glUniformMatrix4fv(handles.uModelMatrix, glm::value_ptr(final));
+   safe_glUniformMatrix4fv(handles.uModelMatrix, glm::value_ptr(ortho));
    safe_glUniformMatrix4fv(handles.uNormMatrix, glm::value_ptr(glm::vec4(1.0f)));
 }
 
@@ -351,7 +369,12 @@ void Draw (void)
    for (std::vector<Airplane>::iterator it = planes.begin(); it != planes.end(); ++ it) {
       it->draw();
    }
-   
+
+   for (std::vector<Text>::iterator it = text.begin(); it != text.end(); ++ it) {
+      it->draw();
+   }   
+
+
    //clean up
 	safe_glDisableVertexAttribArray(handles.aPosition);
 	safe_glDisableVertexAttribArray(handles.aNormal);
@@ -713,7 +736,7 @@ int main( int argc, char *argv[] )
 	InitGeom();
    setWorld();
 
-
+   addText();
 
 
   	glutMainLoop();

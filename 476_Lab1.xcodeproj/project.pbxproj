@@ -13,6 +13,7 @@
 		7B0DE69618F60C67005E430B /* GLSL_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B0DE69218F60C67005E430B /* GLSL_helper.cpp */; };
 		7B0DE69718F60C67005E430B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B0DE69418F60C67005E430B /* main.cpp */; };
 		7B0DE77D18F88CEF005E430B /* Airplane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B0DE77C18F88CEF005E430B /* Airplane.cpp */; };
+		7B68C5B318FB603C00AC67D7 /* Text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B68C5B118FB603C00AC67D7 /* Text.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -264,6 +265,8 @@
 		7B68C4ED18F8CF4E00AC67D7 /* wrap.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = wrap.inl; sourceTree = "<group>"; };
 		7B68C4EF18F8CF4E00AC67D7 /* xstream.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xstream.hpp; sourceTree = "<group>"; };
 		7B68C4F118F8D54000AC67D7 /* GLHandles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GLHandles.h; path = ../GLHandles.h; sourceTree = "<group>"; };
+		7B68C5B118FB603C00AC67D7 /* Text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Text.cpp; sourceTree = "<group>"; };
+		7B68C5B218FB603C00AC67D7 /* Text.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Text.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -302,6 +305,8 @@
 		7B0DE59318F60B57005E430B /* 476_Lab1 */ = {
 			isa = PBXGroup;
 			children = (
+				7B68C5B118FB603C00AC67D7 /* Text.cpp */,
+				7B68C5B218FB603C00AC67D7 /* Text.h */,
 				7B68C4F118F8D54000AC67D7 /* GLHandles.h */,
 				7B68C40D18F8CF4E00AC67D7 /* glm */,
 				7B0DE69018F60C67005E430B /* CMeshLoaderSimple.cpp */,
@@ -632,6 +637,7 @@
 				7B0DE69718F60C67005E430B /* main.cpp in Sources */,
 				7B0DE69518F60C67005E430B /* CMeshLoaderSimple.cpp in Sources */,
 				7B0DE77D18F88CEF005E430B /* Airplane.cpp in Sources */,
+				7B68C5B318FB603C00AC67D7 /* Text.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

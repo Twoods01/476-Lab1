@@ -10,6 +10,7 @@
 #define AIRPLANE
 
 #include <stdio.h>
+#include <sys/time.h>
 #include "CMeshLoaderSimple.h"
 #include "GLSL_helper.h"
 #include "Airplane.hpp"
@@ -28,17 +29,27 @@ Airplane::Airplane(glm::vec3 pos, glm::vec3 size, float rotation, GLHandles hand
    GameObject::velocity = glm::vec3(-cos(rotation * (pi / 180)), 0, sin(rotation * (pi / 180)));
    //cout << "(" << GameObject::velocity.x << ", " << GameObject::velocity.y << ", " << GameObject::velocity.z << ")\n";
    isAlive = true;
+   gettimeofday(&lastUpdated, NULL);
    CMeshLoader::loadVertexBufferObjectFromMesh("cessna500.m", TriangleCount,
       planeBuffObj, colBuffObj, planeNormalBuffObj);
 }
 
+int diff_ms(timeval t1, timeval t2)
+{
+   return (((t1.tv_sec - t2.tv_sec) * 1000000) +
+           (t1.tv_usec - t2.tv_usec))/1000;
+}
+
 void Airplane::step()
 {
+   timeval curtime;
+   gettimeofday(&curtime, NULL);
    if(isAlive)
-      GameObject::position += (.5f) * GameObject::velocity;
+      GameObject::position += ((float)(diff_ms(curtime, lastUpdated)) / 500.0f) * GameObject::velocity;
    else
       GameObject::position.y -= .1f;
-  // cout << "(" << GameObject::position.x << ", " << GameObject::position.y << ", " << GameObject::position.z << ")\n";
+   lastUpdated = curtime;
+   //cout << "(" << GameObject::position.x << ", " << GameObject::position.y << ", " << GameObject::position.z << ")\n" << "Last Updated: " << lastUpdated.tv_usec << "\n";
    return;
 }
 

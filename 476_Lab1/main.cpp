@@ -28,7 +28,7 @@
 #include "glm/gtc/matrix_transform.hpp" //perspective, trans etc
 #include "glm/gtc/type_ptr.hpp" //value_ptr
 
-#define NUM_PLANES 10
+#define NUM_PLANES 100
 #define INIT_WIDTH 600
 #define INIT_HEIGHT 600
 #define MAZE_HEIGHT 40
@@ -41,7 +41,7 @@
 #define GROUND_MAT 3
 
 using namespace std;
-unsigned int const StepSize = 100;
+unsigned int const StepSize = 50;
 
 //GL basics
 int ShadeProg;
@@ -60,8 +60,10 @@ static const float g_groundSize = 10.0;
 //Airplanes
 vector<Airplane> planes;
 
-
+//Text
 vector<Text> text;
+int playerScore = 0;
+int frameRate;
 
 //Light
 glm::vec3 lightPos;
@@ -85,7 +87,6 @@ glm::mat4 ortho = glm::ortho(0.0f, (float)g_width,(float)g_height,0.0f, 0.1f, 10
 
 //User interaction
 glm::vec2 prevMouseLoc;
-bool wframe = false;
 
 /* projection matrix */
 void SetProjectionMatrix() {
@@ -524,13 +525,13 @@ void move(glm::vec3 delta)
 
 void Timer(int param)
 {
-   if(planes.size() < NUM_PLANES && param == 20)
+   if(planes.size() < NUM_PLANES && param == 100)
    {
       addPlane();
       param = 0;
    }
    
-   for (std::vector<Airplane>::iterator it = planes.begin(); it != planes.end(); ++ it)
+   for (std::vector<Airplane>::iterator it = planes.begin(); it < planes.end(); ++ it)
    {
       it->step();
       
@@ -549,9 +550,9 @@ void Timer(int param)
       {
          it->bounce(glm::vec3(0, 0, 1));
       }
-      //Plane in the world, make sure it didn't hit another plane
       else
       {
+         //Plane in the world, make sure it didn't hit another plane
          for (std::vector<Airplane>::iterator it2 = planes.begin(); it2 != planes.end(); ++ it2)
          {
             if(it != it2)
@@ -566,6 +567,15 @@ void Timer(int param)
                       it2->bounce(planeOrigVel);
                }
             }
+         }
+         //Make sure it didn't hit the player
+         if ((eye.x <= it->getPos().x + WALL_COLLISION_SIZE &&
+              eye.x >= it->getPos().x - WALL_COLLISION_SIZE) &&
+             (eye.z <= it->getPos().z + WALL_COLLISION_SIZE &&
+              eye.z >= it->getPos().z -WALL_COLLISION_SIZE) &&
+             !overheadView)
+         {
+            it->kill();
          }
       }
    }

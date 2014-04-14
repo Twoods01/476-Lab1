@@ -6,7 +6,6 @@
  *
  *****************************************************************************/
 #ifdef __APPLE__
-#include "GLUT/glut.h"
 #include <OPENGL/gl.h>
 #endif
 #ifdef __unix__
@@ -14,13 +13,14 @@
 #endif
 
 #define GLFW_INCLUDE_GLU
-//#include "GLFW/glfw3.h"
+#include "glfw3.h"
 #include "CMeshLoaderSimple.h"
 #include "GameObject.hpp"
 #include "GLHandles.h"
 #include "Airplane.hpp"
 #include "Text.h"
 #include <stdlib.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <vector>
 #include "GLSL_helper.h"
@@ -28,7 +28,7 @@
 #include "glm/gtc/matrix_transform.hpp" //perspective, trans etc
 #include "glm/gtc/type_ptr.hpp" //value_ptr
 
-#define NUM_PLANES 100
+#define NUM_PLANES 10
 #define INIT_WIDTH 600
 #define INIT_HEIGHT 600
 #define MAZE_HEIGHT 40
@@ -39,6 +39,9 @@
 
 //Material selection constants
 #define GROUND_MAT 3
+
+//This needs to be forward declared for GLFW
+void move(glm::vec3 delta);
 
 using namespace std;
 unsigned int const StepSize = 50;
@@ -55,10 +58,11 @@ GLuint GrndNormalBuffObj, GrndBuffObj, GIndxBuffObj, GrndTexBuffObj;
 int g_GiboLen;
 vector<glm::vec3> groundTiles;
 static const float g_groundY = 0;
-static const float g_groundSize = 10.0;
+static const float g_groundSize = 20.0;
 
 //Airplanes
 vector<Airplane> planes;
+timeval lastAdded;
 
 //Text
 vector<Text> text;
@@ -110,6 +114,12 @@ float randomFloat(float min, float max)
    return (max - min) * (rand() / (double) RAND_MAX) + min;
 }
 
+int diff_ms(timeval t1, timeval t2)
+{
+   return (((t1.tv_sec - t2.tv_sec) * 1000000) +
+           (t1.tv_usec - t2.tv_usec))/1000;
+}
+
 /* Initialization of objects in the world */
 void setWorld()
 {
@@ -125,25 +135,17 @@ void setWorld()
    //Send light data to shader
    safe_glUniform3f(handles.uLightColor, lightPos.x, lightPos.y, lightPos.z);
    safe_glUniform3f(handles.uLightColor, 1, 1, 1);
-}
-/*
-static void error_callback(int error, const char* description)
-{
-    fputs(description, stderr);
+   
+   gettimeofday(&lastAdded, NULL);
 }
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GL_TRUE);
-}
-*/
+
 //Add a new plane
 void addPlane()
 {
    glm::vec3 pos = glm::vec3(randomFloat(.5, g_groundSize - .5),
-                            PLANE_HEIGHT,
-                            randomFloat(.5, g_groundSize - .5));
+                             PLANE_HEIGHT,
+                             randomFloat(.5, g_groundSize - .5));
    glm::vec3 size = glm::vec3(randomFloat(.5, 1.0));
    float rot  = randomFloat(-180, 180);
    planes.push_back(Airplane(pos, size, rot, handles));
@@ -153,8 +155,8 @@ void addPlane()
 void addText()
 {
    glm::vec3 pos = glm::vec3(randomFloat(.5, g_groundSize - .5),
-                            PLANE_HEIGHT,
-                            randomFloat(.5, g_groundSize - .5));
+                             PLANE_HEIGHT,
+                             randomFloat(.5, g_groundSize - .5));
    glm::vec3 size = glm::vec3(randomFloat(.5, 1.0));
    float rot  = 0; //randomFloat(-180, 180);
    text.push_back(Text(pos, size, rot, handles));
@@ -370,23 +372,22 @@ void Draw (void)
    for (std::vector<Airplane>::iterator it = planes.begin(); it != planes.end(); ++ it) {
       it->draw();
    }
-
+   
    for (std::vector<Text>::iterator it = text.begin(); it != text.end(); ++ it) {
       it->draw();
-   }   
-
-
+   }
+   
+   
    //clean up
 	safe_glDisableVertexAttribArray(handles.aPosition);
 	safe_glDisableVertexAttribArray(handles.aNormal);
    
 	//Disable the shader
 	glUseProgram(0);
-	glutSwapBuffers();
 }
 
 /* Reshape - note no scaling as perspective viewing*/
-void ReshapeGL (int width, int height)
+void ReshapeGL (GLFWwindow* window, int width, int height)
 {
 	g_width = (float)width;
 	g_height = (float)height;
@@ -437,19 +438,8 @@ float p2wy(int in_y) {
    return (in_y - f) / e;
 }
 
-/* Records the mouse position upon click */
-void mouseClick(int button, int state, int x, int y)
-{
-   if (button == GLUT_LEFT_BUTTON) {
-      if (state == GLUT_DOWN) {
-         prevMouseLoc.x = x;
-         prevMouseLoc.y = y;
-      }
-   }
-}
-
 /* Tracks mouse movement for the camera */
-void mouse(int x, int y)
+void mouse(GLFWwindow* window, double x, double y)
 {
    glm::vec2 currentPos = glm::vec2(x, y);
    glm::vec2 delta = currentPos - prevMouseLoc;
@@ -476,11 +466,82 @@ void mouse(int x, int y)
    }
    
    prevMouseLoc = currentPos;
-   glutPostRedisplay();
 }
 
+static void error_callback(int error, const char* description)
+{
+   fputs(description, stderr);
+}
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+   glm::vec3 delta;
+   if(action == GLFW_PRESS || action == GLFW_REPEAT)
+   {
+      switch( key ) {
+         case GLFW_KEY_W:
+            if(!overheadView)
+               delta = glm::normalize(lookAt - eye);
+            else
+               delta = glm::normalize(overheadLookAt - overheadEye);
+            cout << "HERE\n";
+            move(delta);
+            cout << "Post move\n";
+            break;
+         case GLFW_KEY_S:
+            if(!overheadView)
+               delta = glm::normalize(-(lookAt - eye));
+            else
+               delta = glm::normalize(-(overheadLookAt - overheadEye));
+            move(delta);
+            break;
+         case GLFW_KEY_D:
+            if(!overheadView)
+               delta = glm::normalize(glm::cross(upV, -(lookAt - eye)));
+            else
+               delta = glm::normalize(glm::cross(upV, -(overheadLookAt - overheadEye)));
+            move(delta);
+            break;
+         case GLFW_KEY_A:
+            if(!overheadView)
+               delta = glm::normalize(glm::cross(upV, (lookAt - eye)));
+            else
+               delta = glm::normalize(glm::cross(upV, (overheadLookAt - overheadEye)));
+            move(delta);
+            break;
+         case GLFW_KEY_R:
+            setWorld();
+            break;
+         case GLFW_KEY_Q:
+            exit( EXIT_SUCCESS );
+            break;
+         case GLFW_KEY_SPACE:
+            overheadView = !overheadView;
+            if(overheadView)
+            {
+               overheadEye.x = eye.x;
+               overheadEye.z = eye.z;
+               eyePitch = pitch;
+               eyeYaw = yaw;
+               pitch = -pi/2 + .1;
+               overheadLookAt.x = eye.x;// cos(pitch) * cos(yaw) + eye.x;
+               overheadLookAt.y = 0;
+               overheadLookAt.z = eye.z;//cos(pitch)*(cos((pi/2) - yaw)) + eye.z;
+            }
+            else
+            {
+               pitch = eyePitch;
+               yaw = eyeYaw;
+            }
+            SetView();
+            break;
+      }
+   }
+}
+
+
 /*Given a position and a distance from that position calculates
- *If that position would be in the world 
+ *If that position would be in the world
  *False if no collision*/
 bool detectCollision(glm::vec3 eye, glm::vec3 delta)
 {
@@ -505,6 +566,7 @@ bool detectCollision(glm::vec3 eye, glm::vec3 delta)
 
 void move(glm::vec3 delta)
 {
+   cout << "MOVE\n";
    //Don't move if there is a collision, unless we're in overheadView
    //In which case collision detection is ignored
    if(overheadView)
@@ -516,6 +578,7 @@ void move(glm::vec3 delta)
    }
    else if(!detectCollision(eye, delta))
    {
+      cout << "Moving\n";
       eye.x += (.1) * delta.x;
       eye.z += (.1) * delta.z;
       lookAt.x += (.1) * delta.x;
@@ -523,12 +586,14 @@ void move(glm::vec3 delta)
    }
 }
 
-void Timer(int param)
+void Animate()
 {
-   if(planes.size() < NUM_PLANES && param == 100)
+   timeval curTime;
+   gettimeofday(&curTime, NULL);
+   if(planes.size() < NUM_PLANES && diff_ms(curTime, lastAdded) >= 5000)
    {
       addPlane();
-      param = 0;
+      lastAdded = curTime;
    }
    
    for (std::vector<Airplane>::iterator it = planes.begin(); it < planes.end(); ++ it)
@@ -562,9 +627,9 @@ void Timer(int param)
                    (it2->getPos().z <= it->getPos().z + WALL_COLLISION_SIZE &&
                     it2->getPos().z >= it->getPos().z -WALL_COLLISION_SIZE) &&
                    it->getPos().y == it2->getPos().y) {
-                      glm::vec3 planeOrigVel = it->getVel();
-                      it->bounce(it2->getVel());
-                      it2->bounce(planeOrigVel);
+                  glm::vec3 planeOrigVel = it->getVel();
+                  it->bounce(it2->getVel());
+                  it2->bounce(planeOrigVel);
                }
             }
          }
@@ -579,176 +644,55 @@ void Timer(int param)
          }
       }
    }
-   
-   glutPostRedisplay();
-   glutTimerFunc(StepSize, Timer, ++param);
-}
-
-//the keyboard callback
-void keyboard(unsigned char key, int x, int y ){
-   glm::vec3 delta;
-   switch( key ) {
-      case 'w':
-         if(!overheadView)
-            delta = glm::normalize(lookAt - eye);
-         else
-            delta = glm::normalize(overheadLookAt - overheadEye);
-         move(delta);
-         break;
-      case 's':
-         if(!overheadView)
-            delta = glm::normalize(-(lookAt - eye));
-         else
-            delta = glm::normalize(-(overheadLookAt - overheadEye));
-         move(delta);
-         break;
-      case 'd':
-         if(!overheadView)
-            delta = glm::normalize(glm::cross(upV, -(lookAt - eye)));
-         else
-            delta = glm::normalize(glm::cross(upV, -(overheadLookAt - overheadEye)));
-         move(delta);
-         break;
-      case 'a':
-         if(!overheadView)
-            delta = glm::normalize(glm::cross(upV, (lookAt - eye)));
-         else
-            delta = glm::normalize(glm::cross(upV, (overheadLookAt - overheadEye)));
-         move(delta);
-         break;
-      case 'r':
-         setWorld();
-         break;
-      case 'q': case 'Q' :
-         exit( EXIT_SUCCESS );
-         break;
-      case ' ':
-         overheadView = !overheadView;
-         if(overheadView)
-         {
-            overheadEye.x = eye.x;
-            overheadEye.z = eye.z;
-            eyePitch = pitch;
-            eyeYaw = yaw;
-            pitch = -pi/2 + .1;
-            overheadLookAt.x = eye.x;// cos(pitch) * cos(yaw) + eye.x;
-            overheadLookAt.y = 0;
-            overheadLookAt.z = eye.z;//cos(pitch)*(cos((pi/2) - yaw)) + eye.z;
-         }
-         else
-         {
-            pitch = eyePitch;
-            yaw = eyeYaw;
-         }
-         SetView();
-         break;
-   }
-   glutPostRedisplay();
-}
-
-void SpecialInput(int key, int x, int y)
-{
-   cout << key;
-   
-   glutPostRedisplay();
 }
 
 int main( int argc, char *argv[] )
 {
-
-/*
-    GLFWwindow* window;
-
-    glfwSetErrorCallback(error_callback);
-
-    if (!glfwInit())
-        exit(EXIT_FAILURE);
-
-    window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        exit(EXIT_FAILURE);
-    }
-
-    glfwMakeContextCurrent(window);
-
-    glfwSetKeyCallback(window, key_callback);
-
-
-    while (!glfwWindowShouldClose(window))
-    {
-      
-        float ratio;
-        int width, height;
-
-        glfwGetFramebufferSize(window, &width, &height);
-        ratio = width / (float) height;
-
-        glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-        glMatrixMode(GL_MODELVIEW);
-
-        glLoadIdentity();
-        glRotatef((float) glfwGetTime() * 50.f, 0.f, 0.f, 1.f);
-
-        glBegin(GL_TRIANGLES);
-        glColor3f(1.f, 0.f, 0.f);
-        glVertex3f(-0.6f, -0.4f, 0.f);
-        glColor3f(0.f, 1.f, 0.f);
-        glVertex3f(0.6f, -0.4f, 0.f);
-        glColor3f(0.f, 0.f, 1.f);
-        glVertex3f(0.f, 0.6f, 0.f);
-        glEnd();
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-
-    }
-
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
-    exit(EXIT_SUCCESS);
-*/
-
-
-
+   GLFWwindow* window;
+   
    g_width = INIT_WIDTH;
    g_height = INIT_HEIGHT;
    
-   glutInit( &argc, argv );
-   glutInitWindowPosition( 20, 20 );
-   glutInitWindowSize( g_width, g_height );
-   glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
-   glutCreateWindow("Crash the planes");
-   glutReshapeFunc( ReshapeGL );
-   glutDisplayFunc( Draw );
-   glutKeyboardFunc( keyboard );
-   glutSpecialFunc(SpecialInput);
-   glutMotionFunc(mouse);
-   glutMouseFunc(mouseClick);
-   glutTimerFunc(StepSize, Timer, 1);
-   Initialize();
-	
-	//test the openGL version
-	getGLversion();
-	//install the shader
-	if (!InstallShader(textFileRead((char *)"Phong_vert.glsl"), textFileRead((char *)"Phong_frag.glsl"))) {
-		printf("Error installing shader!\n");
-		return 0;
-	}
+   glfwSetErrorCallback(error_callback);
    
-	InitGeom();
+   if (!glfwInit())
+      exit(EXIT_FAILURE);
+   
+   window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+   if (!window)
+   {
+      glfwTerminate();
+      exit(EXIT_FAILURE);
+   }
+   
+   glfwMakeContextCurrent(window);
+   glfwSetKeyCallback(window, key_callback);
+   glfwSetCursorPosCallback(window, mouse);
+   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+   glfwSetWindowSizeCallback(window, ReshapeGL);
+   
+   //test the openGL version
+   getGLversion();
+   //install the shader
+   if (!InstallShader(textFileRead((char *)"Phong_vert.glsl"), textFileRead((char *)"Phong_frag.glsl"))) {
+      printf("Error installing shader!\n");
+      return 0;
+   }
+   Initialize();
+   InitGeom();
    setWorld();
-
-   addText();
-
-
-  	glutMainLoop();
+   
+   while (!glfwWindowShouldClose(window))
+   {
+      Animate();
+      Draw();
+      glfwSwapBuffers(window);
+      glfwPollEvents();
+   }
+   
+   glfwDestroyWindow(window);
+   
+   glfwTerminate();
+   exit(EXIT_SUCCESS);
    return 0;
 }

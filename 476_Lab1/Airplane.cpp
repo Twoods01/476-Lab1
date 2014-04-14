@@ -47,7 +47,7 @@ void Airplane::step()
    if(isAlive)
       GameObject::position += ((float)(diff_ms(curtime, lastUpdated)) / 500.0f) * GameObject::velocity;
    else
-      GameObject::position.y -= .1f;
+      GameObject::position.y -= .05f;
    lastUpdated = curtime;
    //cout << "(" << GameObject::position.x << ", " << GameObject::position.y << ", " << GameObject::position.z << ")\n" << "Last Updated: " << lastUpdated.tv_usec << "\n";
    return;

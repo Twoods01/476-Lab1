@@ -1,2 +1,0 @@
-linux:
-	g++ main.cpp CMeshLoaderSimple.cpp GLSL_helper.cpp Airplane.cpp GLHandles.cpp -DGL_GLEXT_PROTOTYPES   -lGL -lGLU -lglut

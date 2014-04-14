@@ -8,12 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		7B0DE68918F60BB6005E430B /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B0DE68818F60BB6005E430B /* OpenGL.framework */; };
-		7B0DE68B18F60BBC005E430B /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B0DE68A18F60BBC005E430B /* GLUT.framework */; };
 		7B0DE69518F60C67005E430B /* CMeshLoaderSimple.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B0DE69018F60C67005E430B /* CMeshLoaderSimple.cpp */; };
 		7B0DE69618F60C67005E430B /* GLSL_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B0DE69218F60C67005E430B /* GLSL_helper.cpp */; };
 		7B0DE69718F60C67005E430B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B0DE69418F60C67005E430B /* main.cpp */; };
 		7B0DE77D18F88CEF005E430B /* Airplane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B0DE77C18F88CEF005E430B /* Airplane.cpp */; };
 		7B68C5B318FB603C00AC67D7 /* Text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B68C5B118FB603C00AC67D7 /* Text.cpp */; };
+		7B68C6F418FC811600AC67D7 /* libglfw3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B68C6F318FC811600AC67D7 /* libglfw3.a */; };
+		7B68C6F618FC81DA00AC67D7 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B68C6F518FC81DA00AC67D7 /* IOKit.framework */; };
+		7B68C6F818FC81E200AC67D7 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B68C6F718FC81E200AC67D7 /* Cocoa.framework */; };
+		7B68C6FA18FC821A00AC67D7 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B68C6F918FC821A00AC67D7 /* CoreVideo.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -264,9 +267,13 @@
 		7B68C4EC18F8CF4E00AC67D7 /* wrap.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = wrap.hpp; sourceTree = "<group>"; };
 		7B68C4ED18F8CF4E00AC67D7 /* wrap.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = wrap.inl; sourceTree = "<group>"; };
 		7B68C4EF18F8CF4E00AC67D7 /* xstream.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xstream.hpp; sourceTree = "<group>"; };
-		7B68C4F118F8D54000AC67D7 /* GLHandles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GLHandles.h; path = ../GLHandles.h; sourceTree = "<group>"; };
 		7B68C5B118FB603C00AC67D7 /* Text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Text.cpp; sourceTree = "<group>"; };
 		7B68C5B218FB603C00AC67D7 /* Text.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Text.h; sourceTree = "<group>"; };
+		7B68C6F218FC60F700AC67D7 /* GLHandles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLHandles.h; sourceTree = "<group>"; };
+		7B68C6F318FC811600AC67D7 /* libglfw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libglfw3.a; sourceTree = "<group>"; };
+		7B68C6F518FC81DA00AC67D7 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/IOKit.framework; sourceTree = DEVELOPER_DIR; };
+		7B68C6F718FC81E200AC67D7 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		7B68C6F918FC821A00AC67D7 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/CoreVideo.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -274,8 +281,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7B0DE68B18F60BBC005E430B /* GLUT.framework in Frameworks */,
+				7B68C6FA18FC821A00AC67D7 /* CoreVideo.framework in Frameworks */,
+				7B68C6F818FC81E200AC67D7 /* Cocoa.framework in Frameworks */,
+				7B68C6F618FC81DA00AC67D7 /* IOKit.framework in Frameworks */,
 				7B0DE68918F60BB6005E430B /* OpenGL.framework in Frameworks */,
+				7B68C6F418FC811600AC67D7 /* libglfw3.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,12 +295,16 @@
 		7B0DE58818F60B57005E430B = {
 			isa = PBXGroup;
 			children = (
+				7B68C6F918FC821A00AC67D7 /* CoreVideo.framework */,
+				7B68C6F718FC81E200AC67D7 /* Cocoa.framework */,
+				7B68C6F518FC81DA00AC67D7 /* IOKit.framework */,
 				7B0DE68D18F60C36005E430B /* Phong_frag.glsl */,
 				7B0DE68E18F60C36005E430B /* Phong_vert.glsl */,
 				7B0DE68A18F60BBC005E430B /* GLUT.framework */,
 				7B0DE68818F60BB6005E430B /* OpenGL.framework */,
 				7B0DE59318F60B57005E430B /* 476_Lab1 */,
 				7B0DE59218F60B57005E430B /* Products */,
+				7B68C6F318FC811600AC67D7 /* libglfw3.a */,
 			);
 			sourceTree = "<group>";
 		};
@@ -305,9 +319,9 @@
 		7B0DE59318F60B57005E430B /* 476_Lab1 */ = {
 			isa = PBXGroup;
 			children = (
+				7B68C6F218FC60F700AC67D7 /* GLHandles.h */,
 				7B68C5B118FB603C00AC67D7 /* Text.cpp */,
 				7B68C5B218FB603C00AC67D7 /* Text.h */,
-				7B68C4F118F8D54000AC67D7 /* GLHandles.h */,
 				7B68C40D18F8CF4E00AC67D7 /* glm */,
 				7B0DE69018F60C67005E430B /* CMeshLoaderSimple.cpp */,
 				7B0DE69118F60C67005E430B /* CMeshLoaderSimple.h */,
@@ -717,6 +731,15 @@
 		7B0DE59B18F60B57005E430B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/include/GLFW/,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib/,
+					"$(PROJECT_DIR)",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx10.8;
 			};
@@ -725,6 +748,15 @@
 		7B0DE59C18F60B57005E430B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/include/GLFW/,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib/,
+					"$(PROJECT_DIR)",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx10.8;
 			};

@@ -29,10 +29,8 @@
 #include "glm/gtc/type_ptr.hpp" //value_ptr
 
 #define NUM_PLANES 10
-#define INIT_WIDTH 600
+#define INIT_WIDTH 800
 #define INIT_HEIGHT 600
-#define MAZE_HEIGHT 40
-#define MAZE_WIDTH 40
 #define pi 3.14159
 #define PLANE_HEIGHT 1.25
 #define WALL_COLLISION_SIZE .63
@@ -114,7 +112,7 @@ float randomFloat(float min, float max)
    return (max - min) * (rand() / (double) RAND_MAX) + min;
 }
 
-int diff_ms(timeval t1, timeval t2)
+int diffMs(timeval t1, timeval t2)
 {
    return (((t1.tv_sec - t2.tv_sec) * 1000000) +
            (t1.tv_usec - t2.tv_usec))/1000;
@@ -130,7 +128,7 @@ void setWorld()
          groundTiles.push_back(glm::vec3(i, g_groundY, j));
    }
    
-   lightPos= glm::vec3(MAZE_WIDTH / 2, 5, 0);
+   lightPos= glm::vec3(5, 5, 0);
    
    //Send light data to shader
    safe_glUniform3f(handles.uLightColor, lightPos.x, lightPos.y, lightPos.z);
@@ -484,9 +482,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
                delta = glm::normalize(lookAt - eye);
             else
                delta = glm::normalize(overheadLookAt - overheadEye);
-            cout << "HERE\n";
             move(delta);
-            cout << "Post move\n";
             break;
          case GLFW_KEY_S:
             if(!overheadView)
@@ -539,7 +535,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
    }
 }
 
-
 /*Given a position and a distance from that position calculates
  *If that position would be in the world
  *False if no collision*/
@@ -566,7 +561,6 @@ bool detectCollision(glm::vec3 eye, glm::vec3 delta)
 
 void move(glm::vec3 delta)
 {
-   cout << "MOVE\n";
    //Don't move if there is a collision, unless we're in overheadView
    //In which case collision detection is ignored
    if(overheadView)
@@ -578,7 +572,6 @@ void move(glm::vec3 delta)
    }
    else if(!detectCollision(eye, delta))
    {
-      cout << "Moving\n";
       eye.x += (.1) * delta.x;
       eye.z += (.1) * delta.z;
       lookAt.x += (.1) * delta.x;
@@ -590,7 +583,7 @@ void Animate()
 {
    timeval curTime;
    gettimeofday(&curTime, NULL);
-   if(planes.size() < NUM_PLANES && diff_ms(curTime, lastAdded) >= 5000)
+   if(planes.size() < NUM_PLANES && diffMs(curTime, lastAdded) >= 5000)
    {
       addPlane();
       lastAdded = curTime;
@@ -658,7 +651,7 @@ int main( int argc, char *argv[] )
    if (!glfwInit())
       exit(EXIT_FAILURE);
    
-   window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+   window = glfwCreateWindow(g_width, g_height, "Crash the Planes!", NULL, NULL);
    if (!window)
    {
       glfwTerminate();

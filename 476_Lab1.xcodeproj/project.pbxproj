@@ -740,6 +740,7 @@
 					/usr/local/lib/,
 					"$(PROJECT_DIR)",
 				);
+				OTHER_LDFLAGS = "-v";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx10.8;
 			};
@@ -757,6 +758,7 @@
 					/usr/local/lib/,
 					"$(PROJECT_DIR)",
 				);
+				OTHER_LDFLAGS = "-v";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx10.8;
 			};

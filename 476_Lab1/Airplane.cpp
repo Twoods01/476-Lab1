@@ -47,7 +47,10 @@ void Airplane::step()
    if(isAlive)
       GameObject::position += ((float)(diff_ms(curtime, lastUpdated)) / 500.0f) * GameObject::velocity;
    else
-      GameObject::position.y -= .05f;
+   {
+      GameObject::position += ((float)(diff_ms(curtime, lastUpdated)) / 500.0f) * GameObject::velocity;
+      GameObject::position.y -= pow(((float)(diff_ms(curtime, lastUpdated)) / 100.0f), 2);
+   }
    lastUpdated = curtime;
    //cout << "(" << GameObject::position.x << ", " << GameObject::position.y << ", " << GameObject::position.z << ")\n" << "Last Updated: " << lastUpdated.tv_usec << "\n";
    return;
@@ -73,6 +76,8 @@ void Airplane::SetModel(glm::vec3 loc, glm::vec3 size, float rotation) {
    glm::mat4 Scale = glm::scale(glm::mat4(1.0f), size);
    glm::mat4 Trans = glm::translate(glm::mat4(1.0f), loc);
    glm::mat4 Rotate = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 1, 0));
+   if(!isAlive)
+      Rotate = glm::rotate(Rotate, 40.0f, glm::vec3(0, 0, 1));
    
    glm::mat4 final = Trans * Rotate * Scale;
    safe_glUniformMatrix4fv(GameObject::handles.uModelMatrix, glm::value_ptr(final));

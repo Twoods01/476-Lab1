@@ -12,7 +12,12 @@
 #  include <windows.h>
 #endif
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+#ifdef __APPLE__
+#include <OPENGL/gl.h>
+#include <OPENGL/glu.h>
+#endif
+
+//#include <GL/gl.h>
+//#include <GL/glu.h>
 
 #endif

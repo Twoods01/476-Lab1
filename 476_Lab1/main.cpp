@@ -20,6 +20,7 @@
 #include "Airplane.hpp"
 #include "Text.h"
 #include <stdlib.h>
+#include "gltext-0.3.1/src/gltext.h"
 #include <sys/time.h>
 #include <stdio.h>
 #include <vector>
@@ -63,6 +64,8 @@ vector<Airplane> planes;
 timeval lastAdded;
 
 //Text
+gltext::FontPtr font;
+gltext::FontRendererPtr textRender;
 vector<Text> text;
 int playerScore = 0;
 int frameRate;
@@ -91,8 +94,12 @@ glm::mat4 ortho = glm::ortho(0.0f, (float)g_width,(float)g_height,0.0f, 0.1f, 10
 glm::vec2 prevMouseLoc;
 
 /* projection matrix */
-void SetProjectionMatrix() {
-   glm::mat4 Projection = glm::perspective(80.0f, (float)g_width/g_height, 0.1f, 100.f);
+void SetProjectionMatrix(bool drawText) {
+   glm::mat4 Projection;
+   if(!drawText)
+      Projection = glm::perspective(80.0f, (float)g_width/g_height, 0.1f, 100.f);
+   else
+      Projection = glm::ortho(0.0f, (float)g_width / 2,(float)g_height / 2,0.0f, 0.1f, 100.0f);
    safe_glUniformMatrix4fv(handles.uProjMatrix, glm::value_ptr(Projection));
 }
 
@@ -137,6 +144,15 @@ void setWorld()
    gettimeofday(&lastAdded, NULL);
 }
 
+void drawText(const gltext::FontRendererPtr& renderer, std::string text)
+{
+   const int size   = renderer->getFont()->getSize();
+   const int dpi    = renderer->getFont()->getDPI();
+   const int width  = renderer->getWidth(text.c_str());
+   const int height = renderer->getHeight(text.c_str());
+   GLTEXT_STREAM(renderer) << text << size << "  " << dpi
+   << "  " << width << "*" << height;
+}
 
 //Add a new plane
 void addPlane()
@@ -340,7 +356,7 @@ void Draw (void)
  	glUseProgram(ShadeProg);
    
    /* set up the projection and camera - do not change */
-   SetProjectionMatrix();
+   SetProjectionMatrix(false);
    SetView();
    
    safe_glUniform3f(handles.uEyePos, eye.x, eye.y, eye.z);
@@ -375,6 +391,8 @@ void Draw (void)
       it->draw();
    }
    
+   SetProjectionMatrix(true);
+   drawText(textRender, "Testy test");
    
    //clean up
 	safe_glDisableVertexAttribArray(handles.aPosition);
@@ -671,6 +689,13 @@ int main( int argc, char *argv[] )
       printf("Error installing shader!\n");
       return 0;
    }
+   
+   font = gltext::OpenFont("arial.ttf", 24);
+   if(font == NULL)
+      cout << "No font for you!\n";
+   
+   textRender = gltext::CreateRenderer(gltext::PIXMAP, font);
+   
    Initialize();
    InitGeom();
    setWorld();

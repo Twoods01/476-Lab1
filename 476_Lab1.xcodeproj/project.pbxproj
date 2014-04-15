@@ -17,6 +17,8 @@
 		7B68C6F618FC81DA00AC67D7 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B68C6F518FC81DA00AC67D7 /* IOKit.framework */; };
 		7B68C6F818FC81E200AC67D7 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B68C6F718FC81E200AC67D7 /* Cocoa.framework */; };
 		7B68C6FA18FC821A00AC67D7 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B68C6F918FC821A00AC67D7 /* CoreVideo.framework */; };
+		7BC53FF418FD9E94001EA78A /* libgltext.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7BC53FF318FD9E94001EA78A /* libgltext.a */; };
+		7BC5405118FDA20E001EA78A /* libfreetype.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7BC5405018FDA20E001EA78A /* libfreetype.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -274,6 +276,8 @@
 		7B68C6F518FC81DA00AC67D7 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/IOKit.framework; sourceTree = DEVELOPER_DIR; };
 		7B68C6F718FC81E200AC67D7 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		7B68C6F918FC821A00AC67D7 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/CoreVideo.framework; sourceTree = DEVELOPER_DIR; };
+		7BC53FF318FD9E94001EA78A /* libgltext.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libgltext.a; sourceTree = "<group>"; };
+		7BC5405018FDA20E001EA78A /* libfreetype.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libfreetype.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -281,11 +285,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7BC5405118FDA20E001EA78A /* libfreetype.a in Frameworks */,
 				7B68C6FA18FC821A00AC67D7 /* CoreVideo.framework in Frameworks */,
 				7B68C6F818FC81E200AC67D7 /* Cocoa.framework in Frameworks */,
 				7B68C6F618FC81DA00AC67D7 /* IOKit.framework in Frameworks */,
 				7B0DE68918F60BB6005E430B /* OpenGL.framework in Frameworks */,
 				7B68C6F418FC811600AC67D7 /* libglfw3.a in Frameworks */,
+				7BC53FF418FD9E94001EA78A /* libgltext.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -305,6 +311,8 @@
 				7B0DE59318F60B57005E430B /* 476_Lab1 */,
 				7B0DE59218F60B57005E430B /* Products */,
 				7B68C6F318FC811600AC67D7 /* libglfw3.a */,
+				7BC53FF318FD9E94001EA78A /* libgltext.a */,
+				7BC5405018FDA20E001EA78A /* libfreetype.a */,
 			);
 			sourceTree = "<group>";
 		};
@@ -735,10 +743,13 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/usr/local/include/GLFW/,
+					/usr/local/include,
+					/usr/local/include/freetype2,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					/usr/local/lib/,
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/476_Lab1/gltext-0.3.1/src/.libs",
 				);
 				OTHER_LDFLAGS = "-v";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -753,10 +764,13 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/usr/local/include/GLFW/,
+					/usr/local/include,
+					/usr/local/include/freetype2,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					/usr/local/lib/,
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/476_Lab1/gltext-0.3.1/src/.libs",
 				);
 				OTHER_LDFLAGS = "-v";
 				PRODUCT_NAME = "$(TARGET_NAME)";
